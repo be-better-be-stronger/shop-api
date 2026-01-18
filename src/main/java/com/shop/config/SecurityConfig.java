@@ -1,39 +1,44 @@
 package com.shop.config;
 
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandlerImpl;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.shop.security.handler.RestAccessDeniedHandler;
+import com.shop.security.handler.RestAuthenticationEntryPoint;
 import com.shop.security.jwt.JwtAuthFilter;
 
 @Configuration
 public class SecurityConfig {
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
+	public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtFilter,
+			RestAuthenticationEntryPoint authEntryPoint,
+			RestAccessDeniedHandler accessDeniedHandler) throws Exception {
 		http.csrf(csrf -> csrf.disable());
 		http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-		// ✅ ép 401 khi chưa login
-		http.exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-				.accessDeniedHandler(new AccessDeniedHandlerImpl()) // 403 khi đã login nhưng thiếu quyền
+		
+		http.exceptionHandling(ex -> ex.authenticationEntryPoint(authEntryPoint) // ép 401 khi chưa login
+				.accessDeniedHandler(accessDeniedHandler) // 403 khi đã login nhưng thiếu quyền
 		);
 
-		http.authorizeHttpRequests(auth -> auth.requestMatchers("/error").permitAll().requestMatchers("/api/auth/**")
-				.permitAll().requestMatchers("/api/categories/**").permitAll().requestMatchers("/api/products/**")
-				.permitAll().requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+		http.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/error").permitAll()
+				.requestMatchers("/api/auth/**").permitAll()
+				.requestMatchers("/api/categories/**").permitAll()
+				.requestMatchers("/api/products/**").permitAll()
+				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated());
 
 		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
 	
 		http.formLogin(f -> f.disable());
 		http.logout(l -> l.disable());

@@ -1,14 +1,15 @@
 package com.shop.security.jwt;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
@@ -23,10 +24,11 @@ public class JwtService {
     return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
   }
 
-  public String generate(String email) {
+  public String generate(String email, String role) {
     long now = System.currentTimeMillis();
     return Jwts.builder()
         .subject(email)
+        .claim("role", role)
         .issuedAt(new Date(now))
         .expiration(new Date(now + expMinutes * 60_000))
         .signWith(key())
@@ -41,4 +43,10 @@ public class JwtService {
     		.getPayload()
     		.getSubject();
   }
+  
+  public String extractRole(String token) {
+	  return Jwts.parser().verifyWith(key()).build()
+	      .parseSignedClaims(token).getPayload().get("role", String.class);
+	}
+
 }

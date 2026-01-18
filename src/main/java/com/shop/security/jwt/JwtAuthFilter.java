@@ -1,48 +1,59 @@
 package com.shop.security.jwt;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-  private final JwtService jwtService;
-  private final UserDetailsService uds;
+	private final JwtService jwtService;
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest req) {
+		String p = req.getServletPath();
+		return p.startsWith("/api/auth/");
+	}
 
-  @Override
-  protected boolean shouldNotFilter(HttpServletRequest req) {
-    String p = req.getServletPath();
-    return p.startsWith("/api/auth/");
-  }
+	@Override
+	protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+			throws ServletException, IOException {
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-      throws ServletException, IOException {
+		String h = req.getHeader("Authorization");
+		if (h == null || !h.startsWith("Bearer ")) {
+			chain.doFilter(req, res);
+			return;
+		}
 
-    String h = req.getHeader("Authorization");
-    if (h == null || !h.startsWith("Bearer ")) {
-      chain.doFilter(req, res);
-      return;
-    }
+		String token = h.substring(7);
+		try {
+			String email = jwtService.extractEmail(token);
+			String role = jwtService.extractRole(token); // "ADMIN" / "USER"
 
-    String token = h.substring(7);
-    String email = jwtService.extractEmail(token);
+			var auth = new UsernamePasswordAuthenticationToken(email, null, java.util.List
+					.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role)));
+			SecurityContextHolder.getContext().setAuthentication(auth);
 
-    var ud = uds.loadUserByUsername(email);
-    var auth = new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
-    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
-    SecurityContextHolder.getContext().setAuthentication(auth);
-
-    chain.doFilter(req, res);
-  }
+			chain.doFilter(req, res);
+		} catch (ExpiredJwtException e) {
+			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			res.setContentType("application/json");
+			res.getWriter().write("""
+					  {
+					    "status": 401,
+					    "message": "JWT expired. Please login again."
+					  }
+					""");
+		}
+	}
 }
