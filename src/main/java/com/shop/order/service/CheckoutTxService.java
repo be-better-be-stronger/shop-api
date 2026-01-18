@@ -1,5 +1,7 @@
 package com.shop.order.service;
 
+import com.shop.order.dto.CheckoutResponse;
+
 public interface CheckoutTxService {
-	Object checkoutOnce(String email);
+	CheckoutResponse checkoutOnce(String email);
 }

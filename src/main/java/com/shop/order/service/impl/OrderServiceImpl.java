@@ -1,16 +1,21 @@
 package com.shop.order.service.impl;
 
-import com.shop.common.exception.ApiException;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.shop.order.dto.CheckoutResponse;
+import com.shop.order.dto.OrderItemResponse;
+import com.shop.order.dto.OrderResponse;
+import com.shop.order.entity.Order;
+import com.shop.order.entity.OrderItem;
 import com.shop.order.repository.OrderRepository;
 import com.shop.order.service.CheckoutTxService;
 import com.shop.order.service.OrderService;
 
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +26,11 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional
-	public Object checkout(String email) {
+	public CheckoutResponse checkout(String email) {
 		int max = 3;
 		for (int attempt = 1; attempt <= max; attempt++) {
 			try {
-				return checkoutTxService.checkoutOnce(email); // đi qua proxy -> có TX
+				return checkoutTxService.checkoutOnce(email); 
 			} catch (OptimisticLockException e) { // nếu không khớp version
 				handleOptimisticRetry(attempt, max);
 			}
@@ -34,15 +39,21 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public Object myOrders(String email) {
-		return orderRepo.findByUserEmailOrderByIdDesc(email);
+	public List<OrderResponse> myOrders(String email) {
+		return orderRepo.findMyOrdersWithItems(email).stream()
+		        .map(o -> toOrderRes(o)).toList();
 	}
 
 	private void handleOptimisticRetry(int attempt, int max) {
 		if (attempt == max) {
-			throw new ApiException(HttpStatus.CONFLICT, "Có người vừa mua trước. Vui lòng thử lại.");
+			throw new OptimisticLockException();
 		}
 		sleep(attempt);
+	}
+	
+	@Override
+	public List<OrderResponse> getAllOrders() {
+		return orderRepo.findAll().stream().map(o -> toOrderRes(o)).toList();
 	}
 
 	private void sleep(int attempt) {
@@ -52,4 +63,28 @@ public class OrderServiceImpl implements OrderService {
 			Thread.currentThread().interrupt();
 		}
 	}
+	
+	private OrderItemResponse toItemRes(OrderItem i) {
+	    return new OrderItemResponse(
+	        i.getProduct().getId(),
+	        i.getProduct().getName(),
+	        i.getUnitPrice(),
+	        i.getQty(),
+	        i.getLineTotal()
+	    );
+	}
+	
+	private OrderResponse toOrderRes(Order o) {
+	    return new OrderResponse(
+	        o.getId(),
+	        o.getTotal(),
+	        o.getStatus().name(),
+	        o.getCreatedAt(),
+	        o.getItems().stream()
+	            .map(this::toItemRes)
+	            .toList()
+	    );
+	}
+
+	
 }
