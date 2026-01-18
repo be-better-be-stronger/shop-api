@@ -2,15 +2,22 @@ package com.shop.common.response;
 
 import lombok.*;
 
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ApiResponse<T> {
-  private boolean success;
-  private String message;
-  private T data;
+	private boolean success;
+	private String message;
+	private T data;
 
-  public static <T> ApiResponse<T> ok(T data) {
-    return ApiResponse.<T>builder().success(true).message("OK").data(data).build();
-  }
+	public static <T> ApiResponse<T> ok(T data) {
+		return ApiResponse.<T>builder().success(true).message("OK").data(data).build();
+	}
+
+	public static ApiResponse<Void> fail(String message) {
+		return ApiResponse.<Void>builder().success(false).message(message).data(null).build();
+	}
+
 }
