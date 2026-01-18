@@ -1,6 +1,7 @@
 package com.shop.cart.controller;
 
-import com.shop.cart.dto.*;
+import com.shop.cart.dto.request.AddCartItemRequest;
+import com.shop.cart.dto.request.UpdateCartItemQtyRequest;
 import com.shop.cart.service.CartService;
 import com.shop.common.response.ApiResponse;
 import jakarta.validation.Valid;

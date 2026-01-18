@@ -43,6 +43,10 @@ public class CartItem {
     this.qty = qty;
     this.unitPrice = unitPrice;
   }
+  
+  public BigDecimal computeLineTotal() {
+	  return unitPrice.multiply(BigDecimal.valueOf(qty));
+  }
 
   
 }

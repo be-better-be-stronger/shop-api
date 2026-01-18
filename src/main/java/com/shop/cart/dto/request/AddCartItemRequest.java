@@ -1,10 +1,14 @@
-package com.shop.cart.dto;
+package com.shop.cart.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Getter @Setter
-public class UpdateCartItemQtyRequest {
+public class AddCartItemRequest {
+  @NotNull
+  private Integer productId;
+
   @NotNull @Min(1)
   private Integer qty;
 }
+
