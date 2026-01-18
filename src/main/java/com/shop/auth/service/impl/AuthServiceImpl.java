@@ -6,6 +6,7 @@ import com.shop.auth.service.AuthService;
 import com.shop.cart.entity.Cart;
 import com.shop.cart.repository.CartRepository;
 import com.shop.common.exception.ApiException;
+import com.shop.common.exception.ErrorCode;
 import com.shop.security.jwt.JwtService;
 import com.shop.user.entity.User;
 import com.shop.user.entity.UserProfile;
@@ -30,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
 	@Transactional
 	public void register(RegisterRequest req) {
 		if (userRepo.existsByEmail(req.getEmail())) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, "Email already exists");
+			throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCode.ERR_EMAIL_ALREADY_EXISTS.name());
 		}
 
 		User u = new User();
@@ -54,15 +55,15 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public AuthResponse login(LoginRequest req) {
 	  var u = userRepo.findByEmail(req.getEmail())
-	      .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+	      .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, ErrorCode.ERR_INVALID_CREDENTIALS.name()));
 
 	  if (!encoder.matches(req.getPassword(), u.getPassword()))
-	    throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+	    throw new ApiException(HttpStatus.UNAUTHORIZED, ErrorCode.ERR_INVALID_CREDENTIALS.name());
 
 	  if (!UserStatus.ACTIVE.equals(u.getStatus()))
-	    throw new ApiException(HttpStatus.FORBIDDEN, "User is not active");
+	    throw new ApiException(HttpStatus.FORBIDDEN, ErrorCode.ERR_USER_INACTIVE.name());
 
-	  String token = jwtService.generate(u.getEmail());
+	  String token = jwtService.generate(u.getEmail(), u.getRole().name());
 	  return new AuthResponse(token);
 	}
 

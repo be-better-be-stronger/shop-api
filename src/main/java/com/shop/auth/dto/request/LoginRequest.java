@@ -8,10 +8,11 @@ import lombok.*;
 public class LoginRequest {
 	@Email
 	@NotBlank
-	@Size(max = 120)
 	private String email;
 
 	@NotBlank
 	@Size(min = 6, max = 64)
 	private String password;
 }
+
+
