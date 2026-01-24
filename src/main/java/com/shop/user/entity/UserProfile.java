@@ -20,6 +20,9 @@ public class UserProfile {
     @Id
     @Column(name = "user_id")
     private Integer id;
+    
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // 🔥 dùng chung PK với User.id
