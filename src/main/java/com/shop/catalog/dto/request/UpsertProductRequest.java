@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -34,4 +35,12 @@ public class UpsertProductRequest {
 	private Integer categoryId;
 
 	private Boolean isActive;
+	
+	@Pattern(
+			  regexp = "^(/uploads/products/[a-f0-9\\-]{36}\\.(jpg|png|webp))?$",
+			  message = "imageUrl must be like /uploads/products/{uuid}.(jpg|png|webp)"
+			)
+	private String imageUrl;
 }
+
+
