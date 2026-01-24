@@ -21,8 +21,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest req) {
-		String p = req.getServletPath();
-		return p.startsWith("/api/auth/");
+		String path = req.getRequestURI();
+
+        // ✅ Chỉ skip đúng 2 endpoint public của auth
+        if (path.equals("/api/auth/login")) return true;
+        if (path.equals("/api/auth/register")) return true;
+
+        // (tuỳ chọn) ping public
+        if (path.equals("/api/ping")) return true;
+
+        return false;
 	}
 
 	@Override
@@ -47,6 +55,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 			chain.doFilter(req, res);
 		} catch (ExpiredJwtException e) {
 			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			res.setCharacterEncoding("UTF-8");
 			res.setContentType("application/json");
 			res.getWriter().write("""
 					  {
