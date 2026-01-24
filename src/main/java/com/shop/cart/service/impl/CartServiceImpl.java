@@ -1,25 +1,25 @@
 package com.shop.cart.service.impl;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.shop.cart.dto.request.AddCartItemRequest;
 import com.shop.cart.dto.request.UpdateCartItemQtyRequest;
 import com.shop.cart.dto.response.CartItemResponse;
 import com.shop.cart.dto.response.CartResponse;
 import com.shop.cart.entity.CartItem;
-import com.shop.cart.repository.*;
+import com.shop.cart.repository.CartItemRepository;
+import com.shop.cart.repository.CartRepository;
 import com.shop.cart.service.CartService;
 import com.shop.catalog.repository.ProductRepository;
+import com.shop.common.ErrorCode;
 import com.shop.common.exception.ApiException;
-import com.shop.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -33,7 +33,7 @@ public class CartServiceImpl implements CartService {
 	@Override
 	public CartResponse getMyCart(String email) {
 		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND, "Cart is not found"));
 
 		var items = itemRepo.findByCartId(cart.getId());
 
@@ -61,17 +61,17 @@ public class CartServiceImpl implements CartService {
 	@Transactional
 	public void addItem(String email, AddCartItemRequest req) {
 		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND, "Cart is not found"));
 
 		var p = productRepo.findById(req.getProductId())
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_PRODUCT_NOT_FOUND.name()));		
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));		
 		
 		if (Boolean.FALSE.equals(p.getIsActive())) {
-			throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCode.ERR_PRODUCT_INACTIVE.name());
+			throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Product is inactive");
 		}
 		
 		if (req.getQty() > p.getStock())
-			throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCode.ERR_NOT_ENOUGH_STOCK.name());
+			throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Not enough stock");
 
 		var existing = itemRepo.findByCartIdAndProductId(cart.getId(), p.getId());
 		
@@ -80,7 +80,7 @@ public class CartServiceImpl implements CartService {
 			int totalQty = item.getQty() + req.getQty();
 			log.debug("totalQty={}, stock={}", totalQty, p.getStock());
 			if(totalQty > p.getStock()) 
-				throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCode.ERR_NOT_ENOUGH_STOCK.name());
+				throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Not enough stock");
 			item.setQty(totalQty);
 			itemRepo.save(item);
 			return;
@@ -98,13 +98,13 @@ public class CartServiceImpl implements CartService {
 	@Transactional
 	public void updateQty(String email, Integer itemId, UpdateCartItemQtyRequest req) {
 		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		var item = itemRepo.findById(itemId)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_ITEM_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		if (!item.getCart().getId().equals(cart.getId())) {
-			throw new ApiException(HttpStatus.FORBIDDEN, ErrorCode.ERR_NOT_YOUR_CART_ITEM.name());
+			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
 		}
 
 		item.setQty(req.getQty());
@@ -114,13 +114,13 @@ public class CartServiceImpl implements CartService {
 	@Transactional
 	public void removeItem(String email, Integer itemId) {
 		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		var item = itemRepo.findById(itemId)
-				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, ErrorCode.ERR_CART_ITEM_NOT_FOUND.name()));
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		if (!item.getCart().getId().equals(cart.getId())) {
-			throw new ApiException(HttpStatus.FORBIDDEN,  ErrorCode.ERR_NOT_YOUR_CART_ITEM.name());
+			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
 		}
 
 		itemRepo.delete(item);
