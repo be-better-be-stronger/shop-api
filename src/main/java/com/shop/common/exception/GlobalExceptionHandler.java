@@ -31,14 +31,14 @@ public class GlobalExceptionHandler {
   
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException ex) {
-      // trả 404 theo format response của mày
+
       return ResponseEntity.status(ErrorCode.ERR_NOT_FOUND.getStatus())
-              .body(ApiResponse.fail("ERR_NOT_FOUND")); // đổi theo response wrapper của mày
+              .body(ApiResponse.fail(ErrorCode.ERR_NOT_FOUND.name())); 
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Void>> handleOther(Exception e) {
     return ResponseEntity.internalServerError()
-        .body(ApiResponse.fail("ERR_INTERNAL"));
+        .body(ApiResponse.fail(ErrorCode.ERR_SERVER.name()));
   }
 }
