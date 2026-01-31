@@ -44,4 +44,3 @@ public class UpsertProductRequest {
 	private String description;
 }
 
-

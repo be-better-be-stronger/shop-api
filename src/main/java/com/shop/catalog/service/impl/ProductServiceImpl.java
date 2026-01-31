@@ -44,10 +44,8 @@ public class ProductServiceImpl implements ProductService {
 
 		// 2. claim size
 		int size = req.getSize();
-		if (size < 1)
-			size = 10;
-		if (size > 50)
-			size = 50;
+		if (size < 1) size = 10;
+		if (size > 50) size = 50;
 
 		// 3) sort field default + whitelist
 		String sortField = normalize(req.getSort());
@@ -58,10 +56,8 @@ public class ProductServiceImpl implements ProductService {
 
 		// 4) direction default + whitelist (chống null/bậy)
 		String dir = normalize(req.getDir());
-		if (dir == null || dir.isBlank())
-			dir = "asc";
-		if (!ALLOWED_DIRS.contains(dir))
-			dir = "asc";
+		if (dir == null || dir.isBlank()) dir = "asc";
+		if (!ALLOWED_DIRS.contains(dir)) dir = "asc";
 
 		Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(direction, sortField));
@@ -195,7 +191,8 @@ public class ProductServiceImpl implements ProductService {
 	        } catch (Exception ignore) { }
 	    }
 	}
-
+	
+	
 	
 
 }
