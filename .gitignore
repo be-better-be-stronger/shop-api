@@ -24,3 +24,6 @@ application-*.yml
 uploads/
 .postman/
 
+.metadata/
+
+
