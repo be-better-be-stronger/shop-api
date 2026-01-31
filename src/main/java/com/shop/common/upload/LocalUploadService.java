@@ -51,16 +51,13 @@ public class LocalUploadService implements UploadService {
 
 	@Override
 	public void deleteByUrl(String publicUrl) {
-		if (publicUrl == null)
-			return;
+		if (publicUrl == null) return;
 
 		String u = publicUrl.trim();
-		if (u.isEmpty())
-			return;
+		if (u.isEmpty()) 	return;
 
 		// chỉ cho phép xóa dưới /uploads/
-		if (!u.startsWith("/uploads/"))
-			return;
+		if (!u.startsWith("/uploads/")) return;
 
 		// map "/uploads/xxx" -> "uploads/xxx"
 		String rel = u.substring(1); // bỏ dấu "/" đầu
@@ -69,13 +66,11 @@ public class LocalUploadService implements UploadService {
 		// chặn path traversal: đảm bảo nằm trong thư mục uploads
 		Path uploadsRoot = Paths.get("uploads").toAbsolutePath().normalize();
 		Path abs = p.toAbsolutePath().normalize();
-		if (!abs.startsWith(uploadsRoot))
-			return;
+		if (!abs.startsWith(uploadsRoot)) return;
 
 		try {
 			Files.deleteIfExists(abs);
 		} catch (Exception ignored) {
-			// không quăng exception vì xóa file fail không nên làm hỏng nghiệp vụ
 		}
 	}
 
