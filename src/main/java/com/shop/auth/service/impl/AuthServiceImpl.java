@@ -1,5 +1,13 @@
 package com.shop.auth.service.impl;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +23,6 @@ import com.shop.common.exception.ApiException;
 import com.shop.security.jwt.JwtService;
 import com.shop.user.entity.User;
 import com.shop.user.entity.UserProfile;
-import com.shop.user.entity.UserStatus;
 import com.shop.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
 	private final CartRepository cartRepo;
 	private final PasswordEncoder encoder;
 	private final JwtService jwtService;
+	private final AuthenticationManager authManager;
 
 	@Override
 	@Transactional
@@ -54,19 +62,40 @@ public class AuthServiceImpl implements AuthService {
 		cartRepo.save(c);
 	}
 
+//	@Override
+//	public AuthResponse login(LoginRequest req) {
+//	  var u = userRepo.findByEmail(req.getEmail())
+//	      .orElseThrow(() -> new ApiException(ErrorCode.ERR_INVALID_CREDENTIALS));
+//
+//	  if (!encoder.matches(req.getPassword(), u.getPassword()))
+//	    throw new ApiException(ErrorCode.ERR_INVALID_CREDENTIALS);
+//
+//	  if (!UserStatus.ACTIVE.equals(u.getStatus()))
+//	    throw new ApiException(ErrorCode.ERR_USER_INACTIVE);
+//
+//	  String token = jwtService.generate(u.getEmail(), u.getRole().name());
+//	  return new AuthResponse(token);
+//	}
+
 	@Override
 	public AuthResponse login(LoginRequest req) {
-	  var u = userRepo.findByEmail(req.getEmail())
-	      .orElseThrow(() -> new ApiException(ErrorCode.ERR_INVALID_CREDENTIALS));
+		try {
+			Authentication auth = authManager.authenticate(
+					new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword())
+			);
+			UserDetails ud = (UserDetails) auth.getPrincipal();
 
-	  if (!encoder.matches(req.getPassword(), u.getPassword()))
-	    throw new ApiException(ErrorCode.ERR_INVALID_CREDENTIALS);
+		    // Lấy role từ authorities (ROLE_ADMIN/ROLE_USER)
+		    String role = ud.getAuthorities().stream()
+		        .findFirst()
+		        .map(GrantedAuthority::getAuthority)
+		        .orElse("ROLE_USER");
 
-	  if (!UserStatus.ACTIVE.equals(u.getStatus()))
-	    throw new ApiException(ErrorCode.ERR_USER_INACTIVE);
-
-	  String token = jwtService.generate(u.getEmail(), u.getRole().name());
-	  return new AuthResponse(token);
+		    String normalizedRole = role.startsWith("ROLE_") ? role.substring(5) : role;
+		    String token = jwtService.generate(ud.getUsername(), normalizedRole);
+		    return new AuthResponse(token);
+		} catch (UsernameNotFoundException | BadCredentialsException | DisabledException e) {
+			throw new ApiException(ErrorCode.ERR_INVALID_CREDENTIALS);
+		}
 	}
-
 }

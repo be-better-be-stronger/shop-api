@@ -2,6 +2,7 @@ package com.shop.security;
 
 import java.util.List;
 
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
     if (!UserStatus.ACTIVE.equals(u.getStatus())) {
-      throw new UsernameNotFoundException("User is not active");
+      throw new DisabledException("User is not active");
     }
 
     return new org.springframework.security.core.userdetails.User(
