@@ -7,26 +7,24 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
-	ERR_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"), 
-	ERR_FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
+	ERR_UNAUTHORIZED(HttpStatus.UNAUTHORIZED), 
+	ERR_FORBIDDEN(HttpStatus.FORBIDDEN),
 
-	ERR_EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "Email already exists"),
-	ERR_INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, "Invalid credentials"),
-	ERR_USER_INACTIVE(HttpStatus.FORBIDDEN, "User is inactive"),
+	ERR_EMAIL_ALREADY_EXISTS(HttpStatus.BAD_REQUEST),
+	ERR_INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST),
+	ERR_USER_INACTIVE(HttpStatus.FORBIDDEN),
 
-	ERR_NOT_FOUND(HttpStatus.NOT_FOUND, "Not found"), ERR_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "Out of stock"),
-	ERR_CART_EMPTY(HttpStatus.BAD_REQUEST, "Cart is empty"),
+	ERR_NOT_FOUND(HttpStatus.NOT_FOUND), ERR_OUT_OF_STOCK(HttpStatus.BAD_REQUEST),
+	ERR_CART_EMPTY(HttpStatus.BAD_REQUEST),
 
-	ERR_BAD_REQUEST(HttpStatus.BAD_REQUEST, "Bad request"),
+	ERR_BAD_REQUEST(HttpStatus.BAD_REQUEST),
 	
-	ERR_SERVER(HttpStatus.INTERNAL_SERVER_ERROR, "Upload fail");
+	ERR_SERVER(HttpStatus.INTERNAL_SERVER_ERROR);
 
 	private final HttpStatus status;
-	private final String defaultMessage;
 
-	ErrorCode(HttpStatus status, String defaultMessage) {
+	ErrorCode(HttpStatus status) {
 		this.status = status;
-		this.defaultMessage = defaultMessage;
 	}
 
 }

@@ -14,7 +14,6 @@ public class ApiException extends RuntimeException {
 	private final ErrorCode code;
 
 	public ApiException(ErrorCode code) {
-		super(code.getDefaultMessage());
 		this.code = code;
 	}
 

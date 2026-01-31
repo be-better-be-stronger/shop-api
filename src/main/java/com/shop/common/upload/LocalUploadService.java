@@ -41,22 +41,13 @@ public class LocalUploadService implements UploadService {
 			Path target = folder.resolve(filename);
 			Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
-			throw new ApiException(ErrorCode.ERR_SERVER, "UPLOAD_FAILED");
+			throw new ApiException(ErrorCode.ERR_SERVER);
 		}
 
 		// public url mapping /uploads/** -> file:uploads/
 		String publicPrefix = "/" + dir.relativePath().replace("\\", "/");
 		return publicPrefix + "/" + filename;
-	}
-
-	private String guessExt(String contentType) {
-		return switch (contentType) {
-		case "image/jpeg" -> ".jpg";
-		case "image/png" -> ".png";
-		case "image/webp" -> ".webp";
-		default -> "";
-		};
-	}
+	}	
 
 	@Override
 	public void deleteByUrl(String publicUrl) {
@@ -87,4 +78,64 @@ public class LocalUploadService implements UploadService {
 			// không quăng exception vì xóa file fail không nên làm hỏng nghiệp vụ
 		}
 	}
+
+	@Override
+	public String moveImage(String publicUrl, UploadDir targetDir) {
+
+	    if (publicUrl == null || publicUrl.isBlank()) {
+	        throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "IMAGE_URL_EMPTY");
+	    }
+
+	    // chỉ cho phép move file trong /uploads/
+	    if (!publicUrl.startsWith("/uploads/")) {
+	        throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "INVALID_IMAGE_URL");
+	    }
+
+	    // "/uploads/staging/abc.jpg" -> "uploads/staging/abc.jpg"
+	    Path source = Paths.get(publicUrl.substring(1)).normalize();
+
+	    Path uploadsRoot = Paths.get("uploads").toAbsolutePath().normalize();
+	    Path sourceAbs = source.toAbsolutePath().normalize();
+
+	    // chặn path traversal
+	    if (!sourceAbs.startsWith(uploadsRoot)) {
+	        throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "INVALID_IMAGE_PATH");
+	    }
+
+	    if (!Files.exists(sourceAbs)) {
+	        throw new ApiException(ErrorCode.ERR_NOT_FOUND, "IMAGE_NOT_FOUND");
+	    }
+
+	    // lấy extension
+	    String filename = sourceAbs.getFileName().toString();
+	    String ext = "";
+	    int dot = filename.lastIndexOf('.');
+	    if (dot > -1) {
+	        ext = filename.substring(dot);
+	    }
+
+	    String newName = UUID.randomUUID() + ext;
+
+	    Path targetDirPath = Paths.get(targetDir.relativePath());
+	    Path targetAbs = targetDirPath.resolve(newName).toAbsolutePath().normalize();
+
+	    try {
+	        Files.createDirectories(targetDirPath);
+	        Files.move(sourceAbs, targetAbs);
+	    } catch (IOException e) {
+	        throw new ApiException(ErrorCode.ERR_SERVER, "MOVE_IMAGE_FAILED");
+	    }
+
+	    return targetDir.publicPrefix() + "/" + newName;
+	}
+	
+	private String guessExt(String contentType) {
+		return switch (contentType) {
+		case "image/jpeg" -> ".jpg";
+		case "image/png" -> ".png";
+		case "image/webp" -> ".webp";
+		default -> "";
+		};
+	}
+
 }

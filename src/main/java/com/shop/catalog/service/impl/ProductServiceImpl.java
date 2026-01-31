@@ -21,6 +21,7 @@ import com.shop.common.ErrorCode;
 import com.shop.common.exception.ApiException;
 import com.shop.common.upload.LocalUploadService;
 import com.shop.common.upload.Tx;
+import com.shop.common.upload.UploadDir;
 
 import lombok.RequiredArgsConstructor;
 
@@ -86,29 +87,38 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public ProductResponse create(UpsertProductRequest req) {
-		String imageUrl = normalize(req.getImageUrl());
-		try {
-			Category category = categoryRepo.findById(req.getCategoryId())
-					.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
-			Product p = new Product();
+		// imageUrl frontend gửi lên: staging url (hoặc null)
+		String stagingUrl = normalize(req.getImageUrl());
+		String finalUrl = null;
+
+		Category category = categoryRepo.findById(req.getCategoryId())
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		
+		Product p = new Product();
+		try {
+			// 1) insert product trước (imageUrl = null để tránh DB trỏ link staging)
 			p.setName(req.getName());
 			p.setStock(req.getStock());
 			p.setPrice(req.getPrice());
 			p.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
-			p.setImageUrl(imageUrl);
+			p.setImageUrl(null); // quan trọng
 			p.setCategory(category);
+			p.setDescription(req.getDescription());
 
-			productRepo.save(p);
+			productRepo.save(p); // insert (có id)
 
-			return toResponse(p);
-
-		} catch (RuntimeException ex) {
-			if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
-				uploadService.deleteByUrl(imageUrl);
+			// 2) nếu có stagingUrl thì move sang products rồi update
+			if (stagingUrl != null && stagingUrl.startsWith("/uploads/")) {
+				finalUrl = uploadService.moveImage(stagingUrl, UploadDir.PRODUCTS);
+				p.setImageUrl(finalUrl); // dirty check
 			}
-			throw ex;
+		} catch (Exception e) {
+			safeDelete(stagingUrl, finalUrl);
+			throw (e instanceof ApiException) ? (ApiException) e : new ApiException(ErrorCode.ERR_SERVER);
 		}
+
+		return toResponse(p);
 	}
 
 	@Override
@@ -124,22 +134,26 @@ public class ProductServiceImpl implements ProductService {
 		p.setCategory(c);
 		if (req.getIsActive() != null)
 			p.setIsActive(req.getIsActive());
+		p.setDescription(req.getDescription());
 
-		String incoming = normalize(req.getImageUrl());
 		String old = p.getImageUrl();
+		String incoming = normalize(old);
 
 		boolean changedImage = incoming != null && !incoming.equals(old);
 
-		if (changedImage) p.setImageUrl(incoming);
+		if (changedImage)
+			p.setImageUrl(incoming);
 
 		try {
 			Product saved = productRepo.save(p);
 			// chỉ xóa file cũ sau commit nếu ảnh đổi thật
-			if (changedImage && old != null) Tx.afterCommit(() -> uploadService.deleteByUrl(old));			
+			if (changedImage && old != null)
+				Tx.afterCommit(() -> uploadService.deleteByUrl(old));
 			return toResponse(saved);
 		} catch (RuntimeException ex) {
 			// update fail -> rollback file mới để khỏi rác
-			if (changedImage && incoming != null) uploadService.deleteByUrl(incoming);
+			if (changedImage && incoming != null)
+				uploadService.deleteByUrl(incoming);
 			throw ex;
 		}
 	}
@@ -148,6 +162,13 @@ public class ProductServiceImpl implements ProductService {
 	public void disable(Integer id) {
 		var p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 		p.setIsActive(false);
+	}
+	
+	@Override
+	public ProductResponse updateImageUrl(Integer id, String imageUrl) {
+		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		p.setImageUrl(imageUrl);
+		return toResponse(productRepo.save(p));
 	}
 
 	private ProductResponse toResponse(Product p) {
@@ -162,12 +183,19 @@ public class ProductServiceImpl implements ProductService {
 		String t = s.trim();
 		return t.isEmpty() ? null : t;
 	}
+	
+	private void safeDelete(String... urls) {
+	    if (urls == null) return;
 
-	@Override
-	public ProductResponse updateImageUrl(Integer id, String imageUrl) {
-		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
-		p.setImageUrl(imageUrl);
-		return toResponse(productRepo.save(p));
+	    for (String url : urls) {
+	        try {
+	            if (url != null) {
+	                uploadService.deleteByUrl(url);
+	            }
+	        } catch (Exception ignore) { }
+	    }
 	}
+
+	
 
 }

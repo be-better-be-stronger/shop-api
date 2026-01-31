@@ -1,6 +1,7 @@
 package com.shop.common.upload;
 
 public enum UploadDir {
+	STAGING("uploads/staging"), 
 	PRODUCTS("uploads/products"), 
 	AVATARS("uploads/avatars");
 

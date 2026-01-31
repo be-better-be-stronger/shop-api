@@ -50,7 +50,7 @@ public class AdminProductController {
 	  
 	  @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	  public ApiResponse<String> uploadProductImage(@RequestParam("file") MultipartFile file) {
-	    String imageUrl = uploadService.uploadImage(file, UploadDir.PRODUCTS);
+	    String imageUrl = uploadService.uploadImage(file, UploadDir.STAGING);
 	    return ApiResponse.ok(imageUrl);
 	  }
 }
