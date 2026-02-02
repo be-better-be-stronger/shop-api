@@ -40,10 +40,8 @@ public class AdminProductController {
             @Valid PageProductRequest page,          // page, size, q, cat, sort, dir
             @RequestParam(required = false) Boolean status
     ) {
-        PageProductStatusRequest req = new PageProductStatusRequest();
-        req.setPage(page);
-        req.setStatus(status);
-        return ApiResponse.ok(productQueryService.findAdminProducts(req));
+        var resp = productQueryService.findAdminProducts(PageProductStatusRequest.of(page, status));
+        return ApiResponse.ok(resp);
     }
 	
 	@PostMapping
