@@ -36,15 +36,14 @@ public class AdminProductController {
 	private final ProductQueryService productQueryService;
 
 	@GetMapping
-    public Page<ProductResponse> list(
+    public ApiResponse<Page<ProductResponse>> list(
             @Valid PageProductRequest page,          // page, size, q, cat, sort, dir
             @RequestParam(required = false) Boolean status
     ) {
         PageProductStatusRequest req = new PageProductStatusRequest();
         req.setPage(page);
         req.setStatus(status);
-
-        return productQueryService.findAdminProducts(req);
+        return ApiResponse.ok(productQueryService.findAdminProducts(req));
     }
 	
 	@PostMapping
