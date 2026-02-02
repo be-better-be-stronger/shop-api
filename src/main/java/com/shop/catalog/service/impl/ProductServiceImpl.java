@@ -22,9 +22,12 @@ import com.shop.common.exception.ApiException;
 import com.shop.common.upload.LocalUploadService;
 import com.shop.common.upload.Tx;
 import com.shop.common.upload.UploadDir;
+import com.shop.common.util.TextNormalizer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -44,26 +47,30 @@ public class ProductServiceImpl implements ProductService {
 
 		// 2. claim size
 		int size = req.getSize();
-		if (size < 1) size = 10;
-		if (size > 50) size = 50;
+		if (size < 1)
+			size = 10;
+		if (size > 50)
+			size = 50;
 
 		// 3) sort field default + whitelist
-		String sortField = normalize(req.getSort());
+		String sortField = TextNormalizer.normalize(req.getSort());
 		if (sortField == null || sortField.isBlank())
 			sortField = "name";
 		if (!ALLOWED_SORTS.contains(sortField))
 			sortField = "name";
 
 		// 4) direction default + whitelist (chống null/bậy)
-		String dir = normalize(req.getDir());
-		if (dir == null || dir.isBlank()) dir = "asc";
-		if (!ALLOWED_DIRS.contains(dir)) dir = "asc";
+		String dir = TextNormalizer.normalize(req.getDir());
+		if (dir == null || dir.isBlank())
+			dir = "asc";
+		if (!ALLOWED_DIRS.contains(dir))
+			dir = "asc";
 
 		Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(direction, sortField));
 
 		// 5) filter q/cat (optional)
-		String q = normalize(req.getQ());
+		String q = TextNormalizer.normalize(req.getQ());
 		Integer cat = req.getCat();
 
 		// NHÁNH A: không filter
@@ -74,7 +81,8 @@ public class ProductServiceImpl implements ProductService {
 		// NHÁNH B: có q/cat
 		return productRepo.searchActive(q, cat, pageable).map(this::toResponse);
 	}
-
+	
+	
 	@Override
 	public ProductResponse getById(Integer id) {
 		return productRepo.findById(id).filter(p -> Boolean.TRUE.equals(p.getIsActive())).map(this::toResponse)
@@ -85,12 +93,12 @@ public class ProductServiceImpl implements ProductService {
 	public ProductResponse create(UpsertProductRequest req) {
 
 		// imageUrl frontend gửi lên: staging url (hoặc null)
-		String stagingUrl = normalize(req.getImageUrl());
+		String stagingUrl = TextNormalizer.normalize(req.getImageUrl());
 		String finalUrl = null;
 
 		Category category = categoryRepo.findById(req.getCategoryId())
 				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
-		
+
 		Product p = new Product();
 		try {
 			// 1) insert product trước (imageUrl = null để tránh DB trỏ link staging)
@@ -119,11 +127,21 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public ProductResponse update(Integer id, UpsertProductRequest req) {
-		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
-		Category c = categoryRepo.findById(req.getCategoryId())
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		log.info("[ProductUpdate] start id={}, categoryId={}, hasImageUrl={}, isActive={}", id, req.getCategoryId(),
+				req.getImageUrl() != null, req.getIsActive());
 
+		Product p = productRepo.findById(id).orElseThrow(() -> {
+			log.warn("[ProductUpdate] product not found id={}", id);
+			return new ApiException(ErrorCode.ERR_NOT_FOUND);
+		});
+
+		Category c = categoryRepo.findById(req.getCategoryId()).orElseThrow(() -> {
+			log.warn("[ProductUpdate] category not found id={}, categoryId={}", id, req.getCategoryId());
+			return new ApiException(ErrorCode.ERR_NOT_FOUND);
+		});
+
+		// 1) update normal fields
 		p.setName(req.getName());
 		p.setStock(req.getStock());
 		p.setPrice(req.getPrice());
@@ -132,25 +150,85 @@ public class ProductServiceImpl implements ProductService {
 			p.setIsActive(req.getIsActive());
 		p.setDescription(req.getDescription());
 
-		String old = p.getImageUrl();
-		String incoming = normalize(old);
+		// 2) image logic
+		String oldUrl = TextNormalizer.normalize(p.getImageUrl());
+		String incoming = TextNormalizer.normalize(req.getImageUrl());
 
-		boolean changedImage = incoming != null && !incoming.equals(old);
+		boolean hasIncoming = incoming != null && !incoming.isBlank();
+		boolean changedImage = hasIncoming && !incoming.equals(oldUrl);
 
-		if (changedImage)
-			p.setImageUrl(incoming);
+		log.debug("[ProductUpdate] image check id={}, oldUrl={}, incoming={}, hasIncoming={}, changedImage={}", id,
+				oldUrl, incoming, hasIncoming, changedImage);
+
+		String newFinalUrl = null; // để rollback nếu save fail
+
+		if (changedImage) {
+
+			if (!incoming.startsWith("/uploads/")) {
+				log.warn("[ProductUpdate] invalid image url prefix id={}, incoming={}", id, incoming);
+				throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "IMAGE_URL_INVALID");
+			}
+
+			if (incoming.startsWith("/uploads/staging/")) {
+				log.info("[ProductUpdate] moving image staging->products id={}, staging={}", id, incoming);
+
+				newFinalUrl = uploadService.moveImage(incoming, UploadDir.PRODUCTS);
+				p.setImageUrl(newFinalUrl);
+
+				log.info("[ProductUpdate] moved image OK id={}, finalUrl={}", id, newFinalUrl);
+
+			} else if (incoming.startsWith("/uploads/products/")) {
+
+				p.setImageUrl(incoming);
+				log.debug("[ProductUpdate] keep/set products image id={}, url={}", id, incoming);
+
+			} else {
+				log.warn("[ProductUpdate] invalid image dir id={}, incoming={}", id, incoming);
+				throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "IMAGE_URL_DIR_INVALID");
+			}
+		}
 
 		try {
-			Product saved = productRepo.save(p);
-			// chỉ xóa file cũ sau commit nếu ảnh đổi thật
-			if (changedImage && old != null)
-				Tx.afterCommit(() -> uploadService.deleteByUrl(old));
+			Product saved = productRepo.saveAndFlush(p);
+			log.info("[ProductUpdate] db update OK id={}, changedImage={}", id, changedImage);
+
+			// 3) delete old file AFTER COMMIT (chỉ khi đổi ảnh thật)
+			if (changedImage && oldUrl != null) {
+				log.info("[ProductUpdate] schedule delete old image after commit id={}, oldUrl={}", id, oldUrl);
+				Tx.afterCommit(() -> {
+					try {
+						uploadService.deleteByUrl(oldUrl);
+						log.info("[ProductUpdate] deleted old image after commit id={}, oldUrl={}", id, oldUrl);
+					} catch (RuntimeException e) {
+						// xóa file fail không nên làm fail request vì DB đã commit
+						log.error("[ProductUpdate] failed to delete old image after commit id={}, oldUrl={}", id,
+								oldUrl, e);
+					}
+				});
+			}
+
+			log.info("[ProductUpdate] success id={}, finalImageUrl={}", id, saved.getImageUrl());
 			return toResponse(saved);
+
 		} catch (RuntimeException ex) {
-			// update fail -> rollback file mới để khỏi rác
-			if (changedImage && incoming != null)
-				uploadService.deleteByUrl(incoming);
+
+			log.error("[ProductUpdate] failed id={}, will cleanup newFinalUrl={}", id, newFinalUrl, ex);
+
+			// 4) save fail -> cleanup new file (nếu đã move ra products)
+			if (newFinalUrl != null) {
+				try {
+					uploadService.deleteByUrl(newFinalUrl);
+					log.info("[ProductUpdate] cleanup new image OK id={}, newFinalUrl={}", id, newFinalUrl);
+				} catch (RuntimeException cleanupEx) {
+					log.error("[ProductUpdate] cleanup new image FAILED id={}, newFinalUrl={}", id, newFinalUrl,
+							cleanupEx);
+				}
+			}
+
+			// QUAN TRỌNG: giữ ex gốc để biết lỗi DB gì
 			throw ex;
+			// Nếu mày muốn luôn trả ERR_SERVER cho client thì:
+			// throw new ApiException(ErrorCode.ERR_SERVER, "UPDATE_PRODUCT_FAILED", ex);
 		}
 	}
 
@@ -160,6 +238,12 @@ public class ProductServiceImpl implements ProductService {
 		p.setIsActive(false);
 	}
 	
+	@Override
+	public void enable(Integer id) {
+		var p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		p.setIsActive(true);		
+	}
+
 	@Override
 	public ProductResponse updateImageUrl(Integer id, String imageUrl) {
 		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
@@ -173,26 +257,23 @@ public class ProductServiceImpl implements ProductService {
 				.imageUrl(p.getImageUrl()).build();
 	}
 
-	private String normalize(String s) {
-		if (s == null)
-			return null;
-		String t = s.trim();
-		return t.isEmpty() ? null : t;
-	}
-	
-	private void safeDelete(String... urls) {
-	    if (urls == null) return;
 
-	    for (String url : urls) {
-	        try {
-	            if (url != null) {
-	                uploadService.deleteByUrl(url);
-	            }
-	        } catch (Exception ignore) { }
-	    }
+
+	private void safeDelete(String... urls) {
+		if (urls == null)
+			return;
+
+		for (String url : urls) {
+			try {
+				if (url != null) {
+					uploadService.deleteByUrl(url);
+				}
+			} catch (Exception ignore) {
+			}
+		}
 	}
+
 	
-	
-	
+
 
 }

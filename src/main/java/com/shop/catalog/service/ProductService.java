@@ -13,8 +13,11 @@ public interface ProductService {
 	ProductResponse update(Integer id, UpsertProductRequest req);
 	
 	void disable(Integer id);
+	void enable(Integer id);
 
 	ProductResponse getById(Integer id);
 
 	ProductResponse updateImageUrl(Integer id, String imageUrl);
+
+	
 }
