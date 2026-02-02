@@ -11,8 +11,8 @@ import lombok.Setter;
 @Setter
 public class PageProductRequest {
 
-	@Min(1)
-	private int page = 1;
+	@Min(0)
+	private int page = 0;
 
 	@Min(1)
 	@Max(50)

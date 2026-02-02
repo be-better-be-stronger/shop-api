@@ -14,6 +14,7 @@ import com.shop.catalog.dto.request.UpsertProductRequest;
 import com.shop.catalog.dto.response.ProductResponse;
 import com.shop.catalog.entity.Category;
 import com.shop.catalog.entity.Product;
+import com.shop.catalog.mapper.ProductMapper;
 import com.shop.catalog.repository.CategoryRepository;
 import com.shop.catalog.repository.ProductRepository;
 import com.shop.catalog.service.ProductService;
@@ -75,17 +76,17 @@ public class ProductServiceImpl implements ProductService {
 
 		// NHÁNH A: không filter
 		if ((q == null || q.isBlank()) && cat == null) {
-			return productRepo.findByIsActiveTrue(pageable).map(this::toResponse);
+			return productRepo.findByIsActiveTrue(pageable).map(ProductMapper::toResponse);
 		}
 
 		// NHÁNH B: có q/cat
-		return productRepo.searchActive(q, cat, pageable).map(this::toResponse);
+		return productRepo.searchActive(q, cat, pageable).map(ProductMapper::toResponse);
 	}
 	
 	
 	@Override
 	public ProductResponse getById(Integer id) {
-		return productRepo.findById(id).filter(p -> Boolean.TRUE.equals(p.getIsActive())).map(this::toResponse)
+		return productRepo.findById(id).filter(p -> Boolean.TRUE.equals(p.getIsActive())).map(ProductMapper::toResponse)
 				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 	}
 
@@ -122,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
 			throw (e instanceof ApiException) ? (ApiException) e : new ApiException(ErrorCode.ERR_SERVER);
 		}
 
-		return toResponse(p);
+		return ProductMapper.toResponse(p);
 	}
 
 	@Override
@@ -208,7 +209,7 @@ public class ProductServiceImpl implements ProductService {
 			}
 
 			log.info("[ProductUpdate] success id={}, finalImageUrl={}", id, saved.getImageUrl());
-			return toResponse(saved);
+			return ProductMapper.toResponse(saved);
 
 		} catch (RuntimeException ex) {
 
@@ -248,14 +249,10 @@ public class ProductServiceImpl implements ProductService {
 	public ProductResponse updateImageUrl(Integer id, String imageUrl) {
 		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 		p.setImageUrl(imageUrl);
-		return toResponse(productRepo.save(p));
+		return ProductMapper.toResponse(productRepo.save(p));
 	}
 
-	private ProductResponse toResponse(Product p) {
-		return ProductResponse.builder().id(p.getId()).name(p.getName()).stock(p.getStock()).price(p.getPrice())
-				.categoryId(p.getCategory().getId()).categoryName(p.getCategory().getName()).isActive(p.getIsActive())
-				.imageUrl(p.getImageUrl()).build();
-	}
+
 
 
 
