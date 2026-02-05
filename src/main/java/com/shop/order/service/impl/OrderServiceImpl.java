@@ -3,7 +3,6 @@ package com.shop.order.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.shop.order.dto.CheckoutResponse;
 import com.shop.order.dto.OrderItemResponse;
@@ -25,7 +24,6 @@ public class OrderServiceImpl implements OrderService {
 	private final OrderRepository orderRepo;
 
 	@Override
-	@Transactional
 	public CheckoutResponse checkout(String email) {
 		int max = 3;
 		for (int attempt = 1; attempt <= max; attempt++) {
