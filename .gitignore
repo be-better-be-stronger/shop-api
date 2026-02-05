@@ -26,4 +26,6 @@ uploads/
 
 .metadata/
 
+/bin/
+/target/
 
