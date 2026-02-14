@@ -60,17 +60,18 @@ public class OrderServiceImpl implements OrderService {
 		} catch (InterruptedException ex) {
 			Thread.currentThread().interrupt();
 		}
-	}
-	
+	}	
+		
 	private OrderItemResponse toItemRes(OrderItem i) {
-	    return new OrderItemResponse(
-	        i.getProduct().getId(),
-	        i.getProduct().getName(),
-	        i.getUnitPrice(),
-	        i.getQty(),
-	        i.getLineTotal()
-	    );
+	    return OrderItemResponse.builder()
+	            .productId(i.getProduct().getId())
+	            .productName(i.getProduct().getName())
+	            .price(i.getUnitPrice())
+	            .qty(i.getQty())
+	            .lineTotal(i.getLineTotal())
+	            .build();
 	}
+
 	
 	private OrderResponse toOrderRes(Order o) {
 	    return new OrderResponse(

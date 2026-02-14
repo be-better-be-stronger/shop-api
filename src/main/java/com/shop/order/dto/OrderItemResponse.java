@@ -1,16 +1,16 @@
 package com.shop.order.dto;
 
-import lombok.*;
 import java.math.BigDecimal;
 
+import lombok.Builder;
+import lombok.Getter;
+
 @Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class OrderItemResponse {
-	private Integer productId;
-	private String productName;
-	private BigDecimal price;
-	private Integer qty;
-	private BigDecimal lineTotal;
+	private final Integer productId;
+    private final String productName;
+    private final BigDecimal price;
+    private final Integer qty;
+    private final BigDecimal lineTotal;
 }

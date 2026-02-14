@@ -38,7 +38,7 @@ public class CheckoutTxServiceImpl implements CheckoutTxService {
 
 		var cartItems = itemRepo.findByCartId(cart.getId());
 		if (cartItems.isEmpty()) {
-			throw new ApiException(ErrorCode.ERR_NOT_FOUND);
+			throw new ApiException(ErrorCode.ERR_CART_EMPTY);
 		}
 
 		Order order = new Order();
@@ -70,8 +70,12 @@ public class CheckoutTxServiceImpl implements CheckoutTxService {
 		orderRepo.saveAndFlush(order);
 
 		itemRepo.deleteAll(cartItems); // clear cart
-
-		return new CheckoutResponse(order.getId(), total, order.getStatus().name());
+		
+		return CheckoutResponse.builder()
+				.orderId(order.getId())
+				.total(total)
+				.status(order.getStatus().name())
+				.build();
 	}
 }
 

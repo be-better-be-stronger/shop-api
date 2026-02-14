@@ -1,14 +1,14 @@
 package com.shop.order.dto;
 
-import lombok.*;
 import java.math.BigDecimal;
 
+import lombok.Builder;
+import lombok.Getter;
+
 @Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder
 public class CheckoutResponse {
-	private Integer orderId;
-	private BigDecimal total;
-	private String status;
+	private final Integer orderId;
+	private final BigDecimal total;
+	private final String status;
 }
