@@ -29,3 +29,7 @@ uploads/
 /bin/
 /target/
 
+
+node_modules/
+.husky/_/
+
