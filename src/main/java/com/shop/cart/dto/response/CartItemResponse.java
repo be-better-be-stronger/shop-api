@@ -1,15 +1,17 @@
 package com.shop.cart.dto.response;
 
-import lombok.*;
 import java.math.BigDecimal;
 
-@Getter @Setter
-@AllArgsConstructor @NoArgsConstructor
+import lombok.Getter;
+import lombok.Value;
+
+@Getter
+@Value
 public class CartItemResponse {
-  private Integer itemId;
-  private Integer productId;
-  private String productName;
-  private BigDecimal unitPrice;
-  private Integer qty;
-  private BigDecimal lineTotal;
+  Integer itemId;
+  Integer productId;
+  String productName;
+  BigDecimal unitPrice;
+  Integer qty;
+  BigDecimal lineTotal;
 }
