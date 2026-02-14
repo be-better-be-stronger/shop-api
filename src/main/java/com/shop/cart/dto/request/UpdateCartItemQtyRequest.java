@@ -7,7 +7,8 @@ import lombok.Setter;
 
 @Getter @Setter
 public class UpdateCartItemQtyRequest {
-  @NotNull @Min(1)
+	@NotNull(message = "{cart.quantity.required}")
+    @Min(value = 1, message = "{cart.quantity.min}")
   private Integer qty;
 }
 

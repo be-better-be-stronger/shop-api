@@ -1,18 +1,21 @@
 package com.shop.auth.dto.request;
 
-import jakarta.validation.constraints.*;
-import lombok.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
 public class LoginRequest {
-	@Email
-	@NotBlank
-	private String email;
+	@NotBlank(message = "{auth.email.required}")
+    @Email(message = "{auth.email.invalid}")
+    private String email;
 
-	@NotBlank
-	@Size(min = 6, max = 64)
-	private String password;
+    @NotBlank(message = "{auth.password.required}")
+    @Size(min = 6, max = 50, message = "{auth.password.size}")
+    private String password;
 }
 
 

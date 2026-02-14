@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,31 +15,28 @@ import lombok.Setter;
 @Setter
 public class UpsertProductRequest {
 
-	@NotBlank(message = "Name must not be blank")
-	@Size(max = 100, message = "Name must be at most 100 characters")
-	private String name;
+	@NotBlank(message = "{product.name.required}")
+    @Size(max = 100, message = "{product.name.size}")
+    private String name;
 
-	@NotNull(message = "Stock is required")
-	@Min(value = 1, message = "Stock must be >= 1")
-	private Integer stock;
+    @NotNull(message = "{product.stock.required}")
+    @Min(value = 1, message = "{product.stock.min}")
+    private Integer stock;
 
-	@NotNull(message = "Price is required")
-	@DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
-	@Digits(integer = 10, fraction = 2, message = "Price must have up to 10 integer digits and 2 decimal places")
-	private BigDecimal price;
+    @NotNull(message = "{product.price.required}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{product.price.min}")
+    @Digits(integer = 10, fraction = 2, message = "{product.price.digits}")
+    private BigDecimal price;
 
-	@NotNull(message = "CategoryId is required")
-	@Positive(message = "CategoryId must be a positive number")
-	private Integer categoryId;
+    @NotNull(message = "{product.categoryId.required}")
+    @Min(value = 1, message = "{product.cat.min}")
+    private Integer categoryId;
 
-	private Boolean isActive;
-	
-//	@Pattern(
-//			  regexp = "^(/uploads/products/[a-f0-9\\-]{36}\\.(jpg|png|webp))?$",
-//			  message = "imageUrl must be like /uploads/products/{uuid}.(jpg|png|webp)"
-//			)
-	private String imageUrl;
-	
-	private String description;
+    private Boolean isActive;
+
+    private String imageUrl;
+
+    @Size(max = 2000, message = "{product.description.size}")
+    private String description;
 }
 

@@ -1,6 +1,7 @@
 package com.shop.catalog.dto.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import lombok.Setter;
 @Setter
 public class PageProductStatusRequest {
 
+	@NotNull(message = "{product.page.required}")
     @Valid
     private PageProductRequest page;
     private Boolean status;

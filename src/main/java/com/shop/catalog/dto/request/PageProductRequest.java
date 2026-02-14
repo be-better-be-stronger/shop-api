@@ -10,22 +10,22 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PageProductRequest {
+	@Min(value = 0, message = "{page.min}")
+    private int page = 0;
 
-	@Min(0)
-	private int page = 0;
+    @Min(value = 1, message = "{size.min}")
+    @Max(value = 50, message = "{size.max}")
+    private int size = 10;
 
-	@Min(1)
-	@Max(50)
-	private int size = 10;
+    @Size(max = 100, message = "{product.q.size}")
+    private String q;
 
-	@Size(max = 100)
-	private String q;
+    @Min(value = 1, message = "{product.cat.min}")
+    private Integer cat;
 
-	private Integer cat;
+    @Pattern(regexp = "name|price", message = "{product.sort.invalid}")
+    private String sort = "name";
 
-	@Pattern(regexp = "name|price", message = "sort must be 'name' or 'price'")
-	private String sort = "name";
-
-	@Pattern(regexp = "asc|desc", message = "dir must be 'asc' or 'desc'")
-	private String dir = "asc";
+    @Pattern(regexp = "asc|desc", message = "{product.dir.invalid}")
+    private String dir = "asc";
 }
