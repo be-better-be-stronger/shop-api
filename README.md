@@ -119,6 +119,36 @@ Hoặc chạy trực tiếp `ShopApiApplication.java`
 
 ---
 
+## 🛠 Commit Convention
+
+This project enforces **Conventional Commits** using Husky and Commitlint.
+
+Format:
+
+type(scope): subject
+
+Example:
+
+fix(db): correct datasource configuration  
+feat(product): add pagination support  
+refactor(exception): improve validation handling  
+
+Allowed types:
+- feat
+- fix
+- refactor
+- perf
+- test
+- docs
+- style
+- chore
+
+Before committing for the first time:
+
+npm install
+
+---
+
 ## ⚠️ Ghi chú kỹ thuật
 
 - Checkout sử dụng transaction để đảm bảo consistency
