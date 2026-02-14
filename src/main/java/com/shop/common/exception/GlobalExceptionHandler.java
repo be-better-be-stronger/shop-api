@@ -25,9 +25,15 @@ public class GlobalExceptionHandler {
 		Map<String, String> errors = new LinkedHashMap<>();
 
 		for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-			if (isTypeMismatch(fe)) {
-	            errors.putIfAbsent(fe.getField(), "Invalid value");
-	        } else {
+			if (fe.isBindingFailure()) {
+			    String field = fe.getField();
+			    String msg = switch (field) {
+			        case "page" -> "page must be a number";
+			        case "size" -> "size must be a number";
+			        default -> "Invalid value";
+			    };
+			    errors.putIfAbsent(field, msg);
+			} else {
 	            errors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
 	        }
 		}
