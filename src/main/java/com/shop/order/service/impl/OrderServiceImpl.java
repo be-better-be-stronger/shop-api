@@ -72,18 +72,17 @@ public class OrderServiceImpl implements OrderService {
 	            .build();
 	}
 
-	
 	private OrderResponse toOrderRes(Order o) {
-	    return new OrderResponse(
-	        o.getId(),
-	        o.getTotal(),
-	        o.getStatus().name(),
-	        o.getCreatedAt(),
-	        o.getItems().stream()
-	            .map(this::toItemRes)
-	            .toList()
-	    );
+	    return OrderResponse.builder()
+	    		.orderId(o.getId())
+	    		.total(o.getTotal())
+	    		.status(o.getStatus().name())
+	    		.orderDate(o.getCreatedAt())
+	    		.items(o.getItems()
+	    				.stream()
+			            .map(this::toItemRes)
+			            .toList())
+	    		.build();	    
 	}
-
 	
 }
