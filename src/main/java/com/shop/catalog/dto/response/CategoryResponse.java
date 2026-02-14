@@ -1,10 +1,11 @@
 package com.shop.catalog.dto.response;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 
-@Getter @Setter
-@AllArgsConstructor
+@Value // private final
+@Builder
 public class CategoryResponse {
-  private Integer id;
-  private String name;
+	Integer id;
+	String name;
 }

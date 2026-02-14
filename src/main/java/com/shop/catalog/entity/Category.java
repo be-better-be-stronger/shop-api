@@ -3,7 +3,13 @@ package com.shop.catalog.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +27,7 @@ public class Category {
     private String name;
 
  // mappedBy = tên field ở Product (owning side nằm ở Product)
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category")
     private List<Product> products = new ArrayList<>();    
     
     // helper để giữ đồng bộ 2 chiều (cực quan trọng)

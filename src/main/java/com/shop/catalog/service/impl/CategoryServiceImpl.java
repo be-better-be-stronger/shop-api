@@ -21,7 +21,10 @@ public class CategoryServiceImpl implements CategoryService{
 	  @Transactional(readOnly = true)
 	  public List<CategoryResponse> getCategories() {
 	    return categoryRepo.findAll().stream()
-	        .map(c -> new CategoryResponse(c.getId(), c.getName()))
+	        .map(c -> CategoryResponse.builder()
+	        		.id(c.getId())
+	        		.name(c.getName())
+	        		.build())
 	        .toList();
 	  }
 
