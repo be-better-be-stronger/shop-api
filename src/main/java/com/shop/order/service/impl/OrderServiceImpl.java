@@ -5,10 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.shop.order.dto.CheckoutResponse;
-import com.shop.order.dto.OrderItemResponse;
 import com.shop.order.dto.OrderResponse;
-import com.shop.order.entity.Order;
-import com.shop.order.entity.OrderItem;
+import com.shop.order.mapper.OrderMapper;
 import com.shop.order.repository.OrderRepository;
 import com.shop.order.service.CheckoutTxService;
 import com.shop.order.service.OrderService;
@@ -22,6 +20,7 @@ public class OrderServiceImpl implements OrderService {
 
 	private final CheckoutTxService checkoutTxService;
 	private final OrderRepository orderRepo;
+	private final OrderMapper orderMapper;
 
 	@Override
 	public CheckoutResponse checkout(String email) {
@@ -39,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public List<OrderResponse> myOrders(String email) {
 		return orderRepo.findMyOrdersWithItems(email).stream()
-		        .map(o -> toOrderRes(o)).toList();
+		        .map(orderMapper::toOrderRes).toList();
 	}
 
 	private void handleOptimisticRetry(int attempt, int max) {
@@ -51,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Override
 	public List<OrderResponse> getAllOrders() {
-		return orderRepo.findAll().stream().map(o -> toOrderRes(o)).toList();
+		return orderRepo.findAll().stream().map(orderMapper::toOrderRes).toList();
 	}
 
 	private void sleep(int attempt) {
@@ -62,27 +61,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}	
 		
-	private OrderItemResponse toItemRes(OrderItem i) {
-	    return OrderItemResponse.builder()
-	            .productId(i.getProduct().getId())
-	            .productName(i.getProduct().getName())
-	            .price(i.getUnitPrice())
-	            .qty(i.getQty())
-	            .lineTotal(i.getLineTotal())
-	            .build();
-	}
-
-	private OrderResponse toOrderRes(Order o) {
-	    return OrderResponse.builder()
-	    		.orderId(o.getId())
-	    		.total(o.getTotal())
-	    		.status(o.getStatus().name())
-	    		.orderDate(o.getCreatedAt())
-	    		.items(o.getItems()
-	    				.stream()
-			            .map(this::toItemRes)
-			            .toList())
-	    		.build();	    
-	}
+	
 	
 }
