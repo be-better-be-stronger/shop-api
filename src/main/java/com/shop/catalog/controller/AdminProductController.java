@@ -2,7 +2,9 @@ package com.shop.catalog.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +28,7 @@ import com.shop.common.upload.UploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Validated
 @RestController
 @RequestMapping("/api/admin/products")
 @RequiredArgsConstructor
@@ -37,7 +40,7 @@ public class AdminProductController {
 
 	@GetMapping
     public ApiResponse<Page<ProductResponse>> list(
-            @Valid PageProductRequest page,          // page, size, q, cat, sort, dir
+            @Valid @ModelAttribute PageProductRequest page,          // page, size, q, cat, sort, dir
             @RequestParam(required = false) Boolean status
     ) {
         var resp = productQueryService.findAdminProducts(PageProductStatusRequest.of(page, status));

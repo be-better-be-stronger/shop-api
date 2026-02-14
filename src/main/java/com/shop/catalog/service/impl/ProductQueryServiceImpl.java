@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ProductQueryServiceImpl implements ProductQueryService{
 	
-	private ProductRepository productRepo;
+	private final ProductRepository productRepo;
 
 	@Override
     public Page<ProductResponse> findAdminProducts(PageProductStatusRequest request) {
