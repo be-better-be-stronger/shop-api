@@ -1,7 +1,6 @@
 // src/main/java/com/shop/common/GlobalExceptionHandler.java
 package com.shop.common.exception;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -59,7 +58,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException e) {
-		return ResponseEntity.status(e.getStatus()).body(ApiResponse.fail(e.getCode(), null));
+		return ResponseEntity.status(e.getStatus()).body(ApiResponse.fail(e.getCode().name(), null));
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)
@@ -75,14 +74,5 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), null));
 	}
 
-	private boolean isTypeMismatch(FieldError fe) {
-		if (fe.isBindingFailure())
-			return true;
-		String code = fe.getCode();
-		if (code != null && code.startsWith("typeMismatch"))
-			return true;
 
-		String[] codes = fe.getCodes();
-		return codes != null && Arrays.stream(codes).anyMatch(c -> c != null && c.startsWith("typeMismatch"));
-	}
 }
