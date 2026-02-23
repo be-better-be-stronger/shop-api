@@ -48,10 +48,8 @@ public class ProductServiceImpl implements ProductService {
 
 		// 2. claim size
 		int size = req.getSize();
-		if (size < 1)
-			size = 10;
-		if (size > 50)
-			size = 50;
+		if (size < 1) size = 10;
+		if (size > 50) size = 50;
 
 		// 3) sort field default + whitelist
 		String sortField = TextNormalizer.normalize(req.getSort());

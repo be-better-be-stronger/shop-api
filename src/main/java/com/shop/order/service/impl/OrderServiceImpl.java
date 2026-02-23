@@ -60,7 +60,5 @@ public class OrderServiceImpl implements OrderService {
 			Thread.currentThread().interrupt();
 		}
 	}	
-		
-	
 	
 }
