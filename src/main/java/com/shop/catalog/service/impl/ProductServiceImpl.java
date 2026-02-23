@@ -2,6 +2,8 @@ package com.shop.catalog.service.impl;
 
 import java.util.Set;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -83,6 +85,7 @@ public class ProductServiceImpl implements ProductService {
 	
 	
 	@Override
+	@Cacheable(value = "product", key = "#id")
 	public ProductResponse getById(Integer id) {
 		return productRepo.findById(id).filter(p -> Boolean.TRUE.equals(p.getIsActive())).map(ProductMapper::toResponse)
 				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
@@ -125,6 +128,7 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
+	@CacheEvict(value = "product", key = "#id")
 	public ProductResponse update(Integer id, UpsertProductRequest req) {
 
 		log.info("[ProductUpdate] start id={}, categoryId={}, hasImageUrl={}, isActive={}", id, req.getCategoryId(),
@@ -232,6 +236,7 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
+	@CacheEvict(value = "product", key = "#id")
 	public void disable(Integer id) {
 		var p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 		p.setIsActive(false);

@@ -35,6 +35,7 @@ public class SecurityConfig {
 		);
 
 		http.authorizeHttpRequests(auth -> auth
+				 .requestMatchers("/favicon.ico", "/.well-known/**").permitAll()
 				// PUBLIC
 				.requestMatchers("/uploads/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
