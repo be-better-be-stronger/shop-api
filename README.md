@@ -53,11 +53,17 @@ Controller → Service → Repository → Database
 
 ## 📂 Project Structure
 
-com.shop ├─ auth \# authentication & registration ├─ security \# spring
-security, jwt filter, config ├─ user \# user profile & user service ├─
-catalog \# product, category, admin product ├─ cart \# shopping cart
-logic ├─ order \# checkout & transaction logic ├─ common \# response
-wrapper, exception, util └─ config \# shared configuration (cache, etc.)
+```
+com.shop
+├─ auth          # authentication & registration
+├─ security      # spring security, jwt filter, config
+├─ user          # user profile & user service
+├─ catalog       # product, category, admin product
+├─ cart          # shopping cart logic
+├─ order         # checkout & transaction logic
+├─ common        # response wrapper, exception, util
+└─ config        # shared configuration (cache, etc.)
+```
 
 ------------------------------------------------------------------------
 
