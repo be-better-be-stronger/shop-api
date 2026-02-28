@@ -157,6 +157,18 @@ npm install
 
 ---
 
+## 🧠 Engineering Notes
+
+This project documents real production-level issues encountered during development.
+
+Topics covered include:
+- Redis serialization issues
+- Spring Cache proxy behavior
+- Transaction consistency problems
+- Validation & BindException edge cases
+
+See [mistakes.md](./mistakes.md) for root-cause analysis and debugging notes.
+
 ## 📌 Tình trạng
 
 - Backend core: hoàn thiện
@@ -166,4 +178,5 @@ npm install
 
 ## 👤 Author
 
-Thanh – Java Web Fullstack Developer (learning & practice project)
+Thanh – Java Backend Developer
+Production-driven learning project.
