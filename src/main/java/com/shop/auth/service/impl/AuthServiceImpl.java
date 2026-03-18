@@ -57,8 +57,8 @@ public class AuthServiceImpl implements AuthService {
 
 		userRepo.save(u);
 
-		Cart c = new Cart();
-		c.setUser(u);
+		Cart c = new Cart(u);
+
 		cartRepo.save(c);
 	}
 
