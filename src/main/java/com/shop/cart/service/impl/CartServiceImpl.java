@@ -10,7 +10,6 @@ import com.shop.cart.dto.request.AddCartItemRequest;
 import com.shop.cart.dto.request.UpdateCartItemQtyRequest;
 import com.shop.cart.dto.response.CartItemResponse;
 import com.shop.cart.dto.response.CartResponse;
-import com.shop.cart.entity.CartItem;
 import com.shop.cart.repository.CartItemRepository;
 import com.shop.cart.repository.CartRepository;
 import com.shop.cart.service.CartService;
@@ -42,15 +41,10 @@ public class CartServiceImpl implements CartService {
 
 		for (var i : items) {
 			BigDecimal lineTotal = i.computeLineTotal();
-			total = total.add(lineTotal);			
-			CartItemResponse item = new CartItemResponse(
-					i.getId(), 
-					i.getProduct().getId(),
-					i.getProduct().getName(), 
-					i.getUnitPrice(), 
-					i.getQty(), 
-					lineTotal);
-			
+			total = total.add(lineTotal);
+			CartItemResponse item = new CartItemResponse(i.getId(), i.getProduct().getId(), i.getProduct().getName(),
+					i.getUnitPrice(), i.getQty(), lineTotal);
+
 			resItems.add(item);
 		}
 
@@ -63,45 +57,29 @@ public class CartServiceImpl implements CartService {
 		var cart = cartRepo.findByUserEmail(email)
 				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND, "Cart is not found"));
 
-		var p = productRepo.findById(req.getProductId())
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));		
-		
-		if (Boolean.FALSE.equals(p.getIsActive())) {
+		var product = productRepo.findById(req.getProductId())
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+
+		if (Boolean.FALSE.equals(product.getIsActive())) {
 			throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Product is inactive");
 		}
-		
-		if (req.getQty() > p.getStock())
-			throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Not enough stock");
 
-		var existing = itemRepo.findByCartIdAndProductId(cart.getId(), p.getId());
-		
-		if (existing.isPresent()) {
-			var item = existing.get();
-			int totalQty = item.getQty() + req.getQty();
-			log.debug("totalQty={}, stock={}", totalQty, p.getStock());
-			if(totalQty > p.getStock()) 
-				throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Not enough stock");
-			item.setQty(totalQty);
-			itemRepo.save(item);
-			return;
+		int currentQty = cart.getQtyOfItem(product.getId());
+		int totalQty = currentQty + req.getQty();
+
+		if (totalQty > product.getStock()) {
+			throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Not enough stock");
 		}
 
-		CartItem item = new CartItem();
-		item.setCart(cart);
-		item.setProduct(p);
-		item.setQty(req.getQty());
-		item.setUnitPrice(p.getPrice()); // snapshot
-		itemRepo.save(item);
+		cart.addProduct(product, req.getQty(), product.getPrice());
 	}
 
 	@Override
 	@Transactional
 	public void updateQty(String email, Integer itemId, UpdateCartItemQtyRequest req) {
-		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var cart = cartRepo.findByUserEmail(email).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
-		var item = itemRepo.findById(itemId)
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var item = itemRepo.findById(itemId).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		if (!item.getCart().getId().equals(cart.getId())) {
 			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
@@ -113,11 +91,9 @@ public class CartServiceImpl implements CartService {
 	@Override
 	@Transactional
 	public void removeItem(String email, Integer itemId) {
-		var cart = cartRepo.findByUserEmail(email)
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var cart = cartRepo.findByUserEmail(email).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
-		var item = itemRepo.findById(itemId)
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var item = itemRepo.findById(itemId).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 
 		if (!item.getCart().getId().equals(cart.getId())) {
 			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
