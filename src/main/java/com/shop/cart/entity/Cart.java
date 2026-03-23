@@ -43,6 +43,10 @@ public class Cart {
 	public Cart(User user) {
         this.user = user;
     }
+	
+	public Cart(int id) {
+		this.id = id;
+	}
 
     public void addProduct(Product product, int qty, BigDecimal unitPrice) {
         validateQty(qty);

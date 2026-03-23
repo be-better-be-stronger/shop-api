@@ -10,6 +10,8 @@ import com.shop.cart.dto.request.AddCartItemRequest;
 import com.shop.cart.dto.request.UpdateCartItemQtyRequest;
 import com.shop.cart.dto.response.CartItemResponse;
 import com.shop.cart.dto.response.CartResponse;
+import com.shop.cart.entity.Cart;
+import com.shop.cart.entity.CartItem;
 import com.shop.cart.repository.CartItemRepository;
 import com.shop.cart.repository.CartRepository;
 import com.shop.cart.service.CartService;
@@ -85,15 +87,15 @@ public class CartServiceImpl implements CartService {
 			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
 		}
 
-		item.setQty(req.getQty());
+		item.changeQty(req.getQty());
 	}
 
 	@Override
 	@Transactional
 	public void removeItem(String email, Integer itemId) {
-		var cart = cartRepo.findByUserEmail(email).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var cart = findCartByUserEmail(email);
 
-		var item = itemRepo.findById(itemId).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		var item = findCartItemById(itemId);
 
 		if (!item.getCart().getId().equals(cart.getId())) {
 			throw new ApiException(ErrorCode.ERR_FORBIDDEN, "It's not your cart");
@@ -101,4 +103,15 @@ public class CartServiceImpl implements CartService {
 
 		itemRepo.delete(item);
 	}
+	
+	private Cart findCartByUserEmail(String email) {
+		return cartRepo.findByUserEmail(email)
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+	}
+	
+	private CartItem findCartItemById(int id) {
+		return itemRepo.findById(id)
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+	}
+	
 }
