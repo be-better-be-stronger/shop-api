@@ -87,8 +87,10 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	@Cacheable(value = "product", key = "#id")
 	public ProductResponse getById(Integer id) {
-		return productRepo.findById(id).filter(p -> Boolean.TRUE.equals(p.getIsActive())).map(ProductMapper::toResponse)
-				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
+		return productRepo.findById(id).
+				filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+				.map(ProductMapper::toResponse)
+				.orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND, "Product is not found"));
 	}
 
 	@Override
@@ -243,12 +245,14 @@ public class ProductServiceImpl implements ProductService {
 	}
 	
 	@Override
+	@CacheEvict(value = "product", key = "#id")
 	public void enable(Integer id) {
 		var p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 		p.setIsActive(true);		
 	}
 
 	@Override
+	@CacheEvict(value = "product", key = "#id")
 	public ProductResponse updateImageUrl(Integer id, String imageUrl) {
 		Product p = productRepo.findById(id).orElseThrow(() -> new ApiException(ErrorCode.ERR_NOT_FOUND));
 		p.setImageUrl(imageUrl);
