@@ -17,11 +17,15 @@ public enum ErrorCode {
 	ERR_NOT_FOUND(HttpStatus.NOT_FOUND), 
 	ERR_OUT_OF_STOCK(HttpStatus.BAD_REQUEST),
 	ERR_CART_EMPTY(HttpStatus.BAD_REQUEST),
+	
+	ERR_CONFLICT(HttpStatus.CONFLICT),
 
 	ERR_VALIDATION(HttpStatus.BAD_REQUEST),
 	ERR_BAD_REQUEST(HttpStatus.BAD_REQUEST),
 	
 	ERR_SERVER(HttpStatus.INTERNAL_SERVER_ERROR);
+	
+	
 
 	private final HttpStatus status;
 

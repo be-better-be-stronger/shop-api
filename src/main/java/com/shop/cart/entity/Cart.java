@@ -20,6 +20,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,6 +41,9 @@ public class Cart {
 	@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<CartItem> items = new ArrayList<>();
 	
+	@Version
+	private Integer version;
+	
 	public Cart(User user) {
         this.user = user;
     }
@@ -49,8 +53,6 @@ public class Cart {
 	}
 
     public void addProduct(Product product, int qty, BigDecimal unitPrice) {
-        validateQty(qty);
-
         Optional<CartItem> existingItem = findItemByProductId(product.getId());
         if (existingItem.isPresent()) {
             existingItem.get().increaseQty(qty);
@@ -68,8 +70,6 @@ public class Cart {
     }
 
     public void updateProductQty(Integer productId, int qty) {
-        validateQty(qty);
-
         CartItem item = findRequiredItem(productId);
         item.changeQty(qty);
     }
@@ -111,9 +111,5 @@ public class Cart {
     
     
 
-    private void validateQty(int qty) {
-        if (qty <= 0) {
-            throw new ApiException(ErrorCode.ERR_BAD_REQUEST, "Quantity must be greater than zero");
-        }
-    }
+   
 }

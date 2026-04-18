@@ -40,5 +40,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer>,
 	              )
 	        """
 	    )
-	    Page<Product> searchActive(@Param("q") String q, @Param("cat") Integer cat, Pageable pageable);
+	Page<Product> searchActive(@Param("q") String q, @Param("cat") Integer cat, Pageable pageable);
 }

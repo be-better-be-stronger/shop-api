@@ -22,18 +22,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductController {
 
-  private final ProductService productService;
+	private final ProductService productService;
 
-  @GetMapping
-  public ApiResponse<Page<ProductResponse>> getProducts( @Valid @ModelAttribute PageProductRequest req) {
-      return ApiResponse.ok(productService.search(req));
-  }
-  
-  @GetMapping("/{id}")
-  public ApiResponse<ProductResponse> getDetail(@PathVariable Integer id) {
-    return ApiResponse.ok(productService.getById(id));
-  }
-  
-  
+	@GetMapping
+	public ApiResponse<Page<ProductResponse>> getProducts(@Valid @ModelAttribute PageProductRequest req) {
+		return ApiResponse.ok(productService.search(req));
+	}
+
+	@GetMapping("/{id}")
+	public ApiResponse<ProductResponse> getDetail(@PathVariable Integer id) {
+		return ApiResponse.ok(productService.getById(id));
+	}
 
 }

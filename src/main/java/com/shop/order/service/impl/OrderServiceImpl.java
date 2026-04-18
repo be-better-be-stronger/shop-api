@@ -2,8 +2,11 @@ package com.shop.order.service.impl;
 
 import java.util.List;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
+import com.shop.common.ErrorCode;
+import com.shop.common.exception.ApiException;
 import com.shop.order.dto.CheckoutResponse;
 import com.shop.order.dto.OrderResponse;
 import com.shop.order.mapper.OrderMapper;
@@ -28,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
 		for (int attempt = 1; attempt <= max; attempt++) {
 			try {
 				return checkoutTxService.checkoutOnce(email); 
-			} catch (OptimisticLockException e) { // nếu không khớp version
+			} catch (ObjectOptimisticLockingFailureException | OptimisticLockException e) { // nếu không khớp version
 				handleOptimisticRetry(attempt, max);
 			}
 		}
@@ -43,7 +46,10 @@ public class OrderServiceImpl implements OrderService {
 
 	private void handleOptimisticRetry(int attempt, int max) {
 		if (attempt == max) {
-			throw new OptimisticLockException();
+		    throw new ApiException(
+		        ErrorCode.ERR_CONFLICT,
+		        "Checkout conflict, please retry"
+		    );
 		}
 		sleep(attempt);
 	}

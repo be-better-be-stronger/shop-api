@@ -14,6 +14,7 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private final String code;
+    private final String message;
     private final T data;
     private final Map<String, String> errors;
     @Builder.Default
@@ -32,8 +33,17 @@ public class ApiResponse<T> {
                 .code("OK")
                 .build();
     }
+    
+    public static ApiResponse<Void> fail(String code, 
+    		String message) {
+        return ApiResponse.<Void>builder()
+                .code(code)
+                .message(message)
+                .build();
+    }
 
-    public static ApiResponse<Void> fail(String code, Map<String, String> errors) {
+    public static ApiResponse<Void> fail(String code, 
+    		Map<String, String> errors) {
         return ApiResponse.<Void>builder()
                 .code(code)
                 .errors(errors)

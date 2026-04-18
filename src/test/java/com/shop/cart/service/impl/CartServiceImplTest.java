@@ -52,7 +52,7 @@ public class CartServiceImplTest {
 	private CartServiceImpl cartService;
 	
 	@Test
-	void get_my_cart_should_throw_when_cart_not_found() {
+	void getMyCart_should_throw_when_cart_not_found() {
 		when(cartRepo.findByUserEmail(EMAIL)).thenReturn(Optional.empty());
 		assertThrows(ApiException.class, () -> cartService.getMyCart(EMAIL));
 		// Verify
@@ -60,7 +60,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void get_my_cart_should_return_empty_cart_when_cart_exists_but_has_no_items() {
+	void getMyCart_should_return_empty_cart_when_cart_exists_but_has_no_items() {
 	    // Arrange
 	    Cart cart = new Cart(1);
 
@@ -78,7 +78,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void get_my_cart_should_return_cart_with_items_and_total() {
+	void getMyCart_should_return_cart_with_items_and_total() {
 	    // Arrange
 	    Cart cart = new Cart(1);
 
@@ -113,7 +113,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void add_item_should_throw_when_cart_not_found() {
+	void addItem_should_throw_when_cart_not_found() {
 	    // Arrange
 	    AddCartItemRequest req = new AddCartItemRequest(1, 2);
 
@@ -128,7 +128,7 @@ public class CartServiceImplTest {
 	
 	
 	@Test
-    void add_item_should_throw_when_product_not_found() {		
+    void addItem_should_throw_when_product_not_found() {		
 		// Arrange
         AddCartItemRequest req = new AddCartItemRequest(1, 2);
         Cart cart = mock(Cart.class);
@@ -148,7 +148,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void add_item_should_throw_when_product_is_inactive() {
+	void addItem_should_throw_when_product_is_inactive() {
 	    // Arrange
 	    String email = "test@gmail.com";
 	    AddCartItemRequest req = new AddCartItemRequest(1, 2);
@@ -170,7 +170,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void add_item_should_throw_when_not_enough_stock() {
+	void addItem_should_throw_when_not_enough_stock() {
 	    // Arrange
 	    AddCartItemRequest req = new AddCartItemRequest(1, 2);
 
@@ -191,7 +191,7 @@ public class CartServiceImplTest {
 	}
 
 	@Test
-    void add_item_should_add_item_when_product_is_active_and_stock_is_enough() {
+    void addItem_should_add_item_when_product_is_active_and_stock_is_enough() {
         // Arrange
         AddCartItemRequest req = new AddCartItemRequest(1, 2);
 
@@ -214,7 +214,7 @@ public class CartServiceImplTest {
     }
 	
 	@Test
-	void update_qty_should_throw_when_cart_not_found() {
+	void updateQty_should_throw_when_cart_not_found() {
 	    // Arrange
 	    Integer itemId = 1;
 	    UpdateCartItemQtyRequest req = new UpdateCartItemQtyRequest(3);
@@ -228,7 +228,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-	void update_qty_should_throw_when_item_not_found() {
+	void updateQty_should_throw_when_item_not_found() {
 	    // Arrange
 	    Integer itemId = 1;
 	    UpdateCartItemQtyRequest req = new UpdateCartItemQtyRequest(3);
@@ -244,7 +244,7 @@ public class CartServiceImplTest {
 	}
 	
 	@Test
-    void update_qty_should_throw_when_item_does_not_belong_to_user_cart() {
+    void updateQty_should_throw_when_item_does_not_belong_to_user_cart() {
         // Arrange
         String email = "test@gmail.com";
         Integer itemId = 1;
@@ -272,7 +272,7 @@ public class CartServiceImplTest {
     }
 	
 	@Test
-	void update_qty_should_throw_when_item_belongs_to_user_cart_but_qty_invalid() {
+	void updateQty_should_throw_when_item_belongs_to_user_cart_but_qty_invalid() {
 	    // Arrange
 	    Integer itemId = 1;
 	    UpdateCartItemQtyRequest req = new UpdateCartItemQtyRequest(0);
@@ -295,7 +295,7 @@ public class CartServiceImplTest {
 	}
 
     @Test
-    void update_qty_should_update_qty_when_item_belongs_to_user_cart() {
+    void updateQty_should_update_qty_when_item_belongs_to_user_cart() {
         // Arrange
         Integer itemId = 1;
         UpdateCartItemQtyRequest req = new UpdateCartItemQtyRequest(5);
@@ -318,7 +318,7 @@ public class CartServiceImplTest {
     }
     
     @Test
-    void remove_item_should_throw_when_cart_not_found() {
+    void removeItem_should_throw_when_cart_not_found() {
         // Arrange
         when(cartRepo.findByUserEmail(EMAIL)).thenReturn(Optional.empty());
 

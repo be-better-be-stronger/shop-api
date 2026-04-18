@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,6 +42,13 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), errors));
 	}
+	
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	public ResponseEntity<ApiResponse<?>> handleOptimisticLock() {
+		ErrorCode code = ErrorCode.ERR_CONFLICT;
+	    return ResponseEntity.status(409)
+	        .body(ApiResponse.fail(code.name(), "Data was modified by another request"));
+	}
 
 	@ExceptionHandler(ConstraintViolationException.class)
 	public ResponseEntity<ApiResponse<Void>> handleParamValidation(ConstraintViolationException ex) {
@@ -58,21 +66,23 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(ApiException.class)
 	public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException e) {
-		return ResponseEntity.status(e.getStatus()).body(ApiResponse.fail(e.getCode().name(), null));
+		return ResponseEntity.status(e.getStatus()).body(ApiResponse.fail(e.getCode().name(), e.getMessage()));
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)
 	public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ex) {
 		ErrorCode code = ErrorCode.ERR_NOT_FOUND;
 
-		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), null));
+		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), "Không tìm thấy tài nguyên"));
 	}
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<Void>> handleOther(Exception ex) {
 		ErrorCode code = ErrorCode.ERR_SERVER;
-		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), null));
+		return ResponseEntity.status(code.getStatus()).body(ApiResponse.fail(code.name(), "Lỗi hệ thống"));
 	}
+	
+	
 
 
 }
